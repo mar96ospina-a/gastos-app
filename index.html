@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Gastos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Login Screen -->
+    <div class="login-container" id="login-screen">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="login-logo"><i class="fa-solid fa-wallet"></i></div>
+                <h2 id="auth-title">CONTROL DE FINANZAS</h2>
+                <p id="auth-subtitle">Inicia sesión para controlar tus gastos</p>
+            </div>
+            
+            <!-- Login Form -->
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="login-user">Usuario</label>
+                    <input type="text" id="login-user" placeholder="Ingresa tu usuario" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-pass">Contraseña</label>
+                    <input type="password" id="login-pass" placeholder="Ingresa tu contraseña" required>
+                </div>
+                <button type="submit" class="btn-submit login-btn">
+                    Entrar <i class="fa-solid fa-arrow-right-to-bracket"></i>
+                </button>
+                <div class="auth-switch">
+                    ¿No tienes cuenta? <a href="#" id="go-to-register">Regístrate</a>
+                </div>
+            </form>
+
+            <!-- Register Form -->
+            <form id="register-form" style="display: none;">
+                <div class="form-group">
+                    <label for="register-user">Nombre</label>
+                    <input type="text" id="register-user" placeholder="Ingresa tu nombre" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-pass">Contraseña</label>
+                    <input type="password" id="register-pass" placeholder="Crea una contraseña" required>
+                </div>
+                <button type="submit" class="btn-submit login-btn">
+                    Crear Cuenta <i class="fa-solid fa-user-plus"></i>
+                </button>
+                <div class="auth-switch">
+                    ¿Ya tienes cuenta? <a href="#" id="go-to-login">Inicia sesión</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="app-container" id="main-app" style="display: none;">
+        <header>
+            <div class="header-top">
+                <h2>CONTROL DE FINANZAS</h2>
+                <div class="user-avatar" id="avatar-btn">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+            </div>
+            
+            <div class="balance-card">
+                <p>Balance Total</p>
+                <h1 id="balance">$0.00</h1>
+                
+                <div class="summary-cards">
+                    <div class="summary-card income">
+                        <div class="icon"><i class="fa-solid fa-arrow-trend-up"></i></div>
+                        <div>
+                            <p>Ingresos</p>
+                            <h3 id="income-total">$0.00</h3>
+                        </div>
+                    </div>
+                    <div class="summary-card expense">
+                        <div class="icon"><i class="fa-solid fa-arrow-trend-down"></i></div>
+                        <div>
+                            <p>Gastos</p>
+                            <h3 id="expense-total">$0.00</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <section class="add-transaction">
+                <h3>Añadir Movimiento</h3>
+                <form id="transaction-form">
+                    <div class="form-group">
+                        <label for="desc">Descripción</label>
+                        <input type="text" id="desc" placeholder="Ej. Supermercado" required autocomplete="off">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="amount">Monto</label>
+                            <input type="number" id="amount" placeholder="0.00" step="0.01" min="0.01" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="type">Tipo</label>
+                            <select id="type">
+                                <option value="expense">Gasto</option>
+                                <option value="income">Ingreso</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-submit">
+                        <i class="fa-solid fa-plus"></i> Añadir
+                    </button>
+                </form>
+            </section>
+
+            <section class="history">
+                <div class="history-header">
+                    <h3>Movimientos Recientes</h3>
+                    <button id="clear-all" class="btn-clear">Limpiar</button>
+                </div>
+                <ul id="transaction-list" class="transaction-list">
+                    <!-- Transactions will be added here via JS -->
+                </ul>
+            </section>
+        </main>
+    </div>
+    
+    <!-- User Profile Modal -->
+    <div id="profile-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Mi Perfil</h3>
+                <button class="close-modal" id="close-profile-btn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="profile-avatar-large">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+                <div class="form-group">
+                    <label for="profile-name">Nombre</label>
+                    <input type="text" id="profile-name" value="Usuario" placeholder="Tu nombre">
+                </div>
+                <div class="form-group">
+                    <label for="profile-password">Contraseña</label>
+                    <input type="password" id="profile-password" value="********" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Tema de color</label>
+                    <div class="color-selector">
+                        <div class="color-option active" data-theme="" style="background-color: #475569;" title="Gris Pizarra"></div>
+                        <div class="color-option" data-theme="theme-black" style="background-color: #171717;" title="Negro"></div>
+                        <div class="color-option" data-theme="theme-white" style="background-color: #FFFFFF; border: 1px solid #E2E8F0;" title="Blanco"></div>
+                        <div class="color-option" data-theme="theme-fuchsia" style="background-color: #D65A8D;" title="Fucsia"></div>
+                        <div class="color-option" data-theme="theme-gray" style="background-color: #9CA3AF;" title="Gris Claro"></div>
+                    </div>
+                </div>
+                
+                <div class="profile-actions">
+                    <button type="button" class="btn-secondary" id="change-password-btn">
+                        <i class="fa-solid fa-key"></i> Cambiar Contraseña
+                    </button>
+                    <button type="button" class="btn-danger" id="logout-btn">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i> Cerrar Sesión
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="app.js"></script>
+</body>
+</html>
