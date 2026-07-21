@@ -4,6 +4,7 @@ const incomeTotalEl = document.getElementById('income-total');
 const expenseTotalEl = document.getElementById('expense-total');
 const transactionListEl = document.getElementById('transaction-list');
 const form = document.getElementById('transaction-form');
+const descSelect = document.getElementById('desc-select');
 const descInput = document.getElementById('desc');
 const amountInput = document.getElementById('amount');
 const typeInput = document.getElementById('type');
@@ -22,9 +23,40 @@ const formatDate = (dateString) => {
 // Application State
 let transactions = JSON.parse(localStorage.getItem('gastos_transactions')) || [];
 
+// Categorías
+let categories = JSON.parse(localStorage.getItem('gastos_categories')) || ['Mercado', 'Arriendo', 'Cuota Carro', 'Cuota Apartamento'];
+
+const renderCategories = () => {
+    descSelect.innerHTML = '';
+    categories.forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat;
+        option.innerText = cat;
+        descSelect.appendChild(option);
+    });
+    const customOption = document.createElement('option');
+    customOption.value = 'Otra';
+    customOption.innerText = 'Otra...';
+    descSelect.appendChild(customOption);
+};
+
+// Handle category select change
+descSelect.addEventListener('change', () => {
+    if (descSelect.value === 'Otra') {
+        descInput.style.display = 'block';
+        descInput.required = true;
+        descInput.focus();
+    } else {
+        descInput.style.display = 'none';
+        descInput.required = false;
+        descInput.value = '';
+    }
+});
+
 // Init App
 const init = () => {
     transactionListEl.innerHTML = '';
+    renderCategories();
     
     if(transactions.length === 0) {
         transactionListEl.innerHTML = '<li class="empty-state">No hay movimientos aún. ¡Añade uno!</li>';
@@ -108,14 +140,25 @@ const generateID = () => {
 form.addEventListener('submit', (e) => {
     e.preventDefault();
     
-    if (descInput.value.trim() === '' || amountInput.value.trim() === '') {
+    let finalDesc = descSelect.value;
+    if (descSelect.value === 'Otra') {
+        finalDesc = descInput.value.trim();
+        // Guardar nueva categoría si no existe
+        if (finalDesc && !categories.includes(finalDesc)) {
+            categories.push(finalDesc);
+            localStorage.setItem('gastos_categories', JSON.stringify(categories));
+            renderCategories();
+        }
+    }
+    
+    if (finalDesc === '' || amountInput.value.trim() === '') {
         alert('Por favor añade una descripción y un monto');
         return;
     }
     
     const transaction = {
         id: generateID(),
-        desc: descInput.value,
+        desc: finalDesc,
         amount: +amountInput.value,
         type: typeInput.value,
         date: new Date().toISOString()
@@ -128,6 +171,9 @@ form.addEventListener('submit', (e) => {
     updateLocalStorage();
     
     // Clear inputs
+    descSelect.value = categories[0];
+    descInput.style.display = 'none';
+    descInput.required = false;
     descInput.value = '';
     amountInput.value = '';
     
