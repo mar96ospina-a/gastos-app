@@ -610,26 +610,42 @@ if ('serviceWorker' in navigator) {
     });
 }
 
-let deferredPrompt;
 const installBtn = document.getElementById('install-btn');
 
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    if (installBtn) installBtn.style.display = 'block';
-});
+// Check if user is on iOS
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
-if (installBtn) {
-    installBtn.addEventListener('click', async () => {
-        if (deferredPrompt) {
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            if (outcome === 'accepted') {
-                console.log('User accepted the install prompt');
-            }
-            deferredPrompt = null;
-            installBtn.style.display = 'none';
-        }
+if (isIOS) {
+    // iOS doesn't support beforeinstallprompt, so we just show the button with instructions
+    if (installBtn) {
+        installBtn.style.display = 'block';
+        installBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            alert("Para instalar en tu iPhone o iPad:\n\n1. Toca el icono de 'Compartir' (el cuadrado con la flecha hacia arriba) en la barra inferior de Safari.\n2. Desliza hacia abajo y selecciona 'Agregar a inicio'.");
+        });
+    }
+} else {
+    // Android / Chrome / Edge logic
+    let deferredPrompt;
+    
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        if (installBtn) installBtn.style.display = 'block';
     });
+
+    if (installBtn) {
+        installBtn.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    console.log('User accepted the install prompt');
+                }
+                deferredPrompt = null;
+                installBtn.style.display = 'none';
+            }
+        });
+    }
 }
 
