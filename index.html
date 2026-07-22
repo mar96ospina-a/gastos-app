@@ -6,6 +6,7 @@
     <title>Control de Gastos</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- FontAwesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -180,6 +181,19 @@
                     <ul id="pending-list" class="transaction-list">
                         <!-- Pendientes dinámicos -->
                     </ul>
+                </div>
+            </section>
+
+            <section class="chart-section">
+                <div class="section-header collapsible" onclick="toggleSection(this)">
+                    <h3>Resumen de Gastos</h3>
+                    <i class="fa-solid fa-chevron-down"></i>
+                </div>
+                <div class="section-content" style="display: none;">
+                    <div style="position: relative; height:250px; width:100%; margin: 0 auto; display: flex; justify-content: center; align-items: center;">
+                        <canvas id="expenses-chart"></canvas>
+                        <p id="no-chart-data" style="position: absolute; color: #94A3B8; font-size: 0.9rem; text-align: center; display: none;">No hay gastos en este mes para graficar.</p>
+                    </div>
                 </div>
             </section>
 

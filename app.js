@@ -28,6 +28,8 @@ const pendingAmountInput = document.getElementById('pending-amount');
 const pendingDateInput = document.getElementById('pending-date');
 const pendingListEl = document.getElementById('pending-list');
 
+let expensesChart = null;
+
 // Formatting utilities
 const formatMoney = (amount) => {
     return '$' + parseFloat(amount).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
@@ -135,6 +137,71 @@ const loadMonthlyGoals = () => {
     }
 };
 
+const renderChart = () => {
+    const ctx = document.getElementById('expenses-chart');
+    const noDataText = document.getElementById('no-chart-data');
+    
+    const filtered = getFilteredTransactions();
+    const currentMonthExpenses = filtered.filter(t => t.type === 'expense');
+    
+    if(currentMonthExpenses.length === 0) {
+        ctx.style.display = 'none';
+        noDataText.style.display = 'block';
+        if(expensesChart) expensesChart.destroy();
+        return;
+    }
+    
+    ctx.style.display = 'block';
+    noDataText.style.display = 'none';
+    
+    const expensesByCategory = {};
+    currentMonthExpenses.forEach(t => {
+        if(!expensesByCategory[t.desc]) {
+            expensesByCategory[t.desc] = 0;
+        }
+        expensesByCategory[t.desc] += t.amount;
+    });
+    
+    const labels = Object.keys(expensesByCategory);
+    const data = Object.values(expensesByCategory);
+    
+    const bgColors = [
+        '#3B82F6', '#10B981', '#F59E0B', '#EF4444', 
+        '#8B5CF6', '#EC4899', '#14B8A6', '#F97316', '#64748B'
+    ];
+    
+    if(expensesChart) {
+        expensesChart.destroy();
+    }
+    
+    expensesChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: bgColors.slice(0, labels.length),
+                borderWidth: 0,
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: {
+                        font: { family: "'Outfit', sans-serif" },
+                        boxWidth: 12,
+                        padding: 10
+                    }
+                }
+            }
+        }
+    });
+};
+
 const init = () => {
     updateMonthDisplay();
     loadMonthlyGoals();
@@ -152,6 +219,7 @@ const init = () => {
     
     renderPendingTransactions();
     updateValues();
+    renderChart();
 };
 
 const addTransactionDOM = (transaction) => {
