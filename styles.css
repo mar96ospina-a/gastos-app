@@ -777,3 +777,9 @@ body.theme-gray {
     transform: rotate(180deg);
 }
 
+
+.section-header.collapsible h3, .history-header h3, main section h3 {
+    font-size: 1.1rem !important;
+    font-weight: 600;
+}
+
