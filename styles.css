@@ -26,6 +26,9 @@
 }
 
 body {
+    margin: 0;
+    width: 100%;
+    overflow-x: hidden;
     font-family: 'Outfit', sans-serif;
     background-color: var(--bg-color);
     color: var(--text-main);
