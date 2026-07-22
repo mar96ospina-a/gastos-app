@@ -10,6 +10,22 @@ const amountInput = document.getElementById('amount');
 const typeInput = document.getElementById('type');
 const clearAllBtn = document.getElementById('clear-all');
 
+// New UI Elements
+const currentMonthDisplay = document.getElementById('current-month-display');
+const prevMonthBtn = document.getElementById('prev-month-btn');
+const nextMonthBtn = document.getElementById('next-month-btn');
+
+const expectedIncomeInput = document.getElementById('expected-income');
+const savingsGoalInput = document.getElementById('savings-goal');
+const currentSavingsEl = document.getElementById('current-savings');
+const savingsStatusEl = document.getElementById('savings-status');
+const savingsBarFill = document.getElementById('savings-bar-fill');
+
+const pendingForm = document.getElementById('pending-form');
+const pendingDescInput = document.getElementById('pending-desc');
+const pendingAmountInput = document.getElementById('pending-amount');
+const pendingListEl = document.getElementById('pending-list');
+
 // Formatting utilities
 const formatMoney = (amount) => {
     return '$' + parseFloat(amount).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
@@ -22,9 +38,27 @@ const formatDate = (dateString) => {
 
 // Application State
 let transactions = JSON.parse(localStorage.getItem('gastos_transactions')) || [];
-
-// Categorías
 let categories = JSON.parse(localStorage.getItem('gastos_categories')) || ['Mercado', 'Arriendo', 'Cuota Carro', 'Cuota Apartamento'];
+let pendingTransactions = JSON.parse(localStorage.getItem('gastos_pending')) || [];
+let monthlyGoals = JSON.parse(localStorage.getItem('gastos_goals')) || {};
+
+let currentDate = new Date();
+let currentMonth = currentDate.getMonth(); // 0-11
+let currentYear = currentDate.getFullYear();
+
+const getMonthKey = () => `${currentYear}-${(currentMonth + 1).toString().padStart(2, '0')}`;
+
+const getFilteredTransactions = () => {
+    return transactions.filter(t => {
+        const d = new Date(t.date);
+        return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+    });
+};
+
+const updateMonthDisplay = () => {
+    const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    currentMonthDisplay.innerText = `${months[currentMonth]} ${currentYear}`;
+};
 
 const renderCategories = () => {
     descSelect.innerHTML = '';
@@ -40,7 +74,6 @@ const renderCategories = () => {
     descSelect.appendChild(customOption);
 };
 
-// Handle category select change
 descSelect.addEventListener('change', () => {
     if (descSelect.value === 'Otra') {
         descInput.style.display = 'block';
@@ -53,21 +86,49 @@ descSelect.addEventListener('change', () => {
     }
 });
 
-// Init App
-const init = () => {
-    transactionListEl.innerHTML = '';
-    renderCategories();
-    
-    if(transactions.length === 0) {
-        transactionListEl.innerHTML = '<li class="empty-state">No hay movimientos aún. ¡Añade uno!</li>';
-    } else {
-        transactions.forEach(addTransactionDOM);
-    }
-    
+const saveMonthlyGoals = () => {
+    const key = getMonthKey();
+    monthlyGoals[key] = {
+        income: parseFloat(expectedIncomeInput.value) || 0,
+        savings: parseFloat(savingsGoalInput.value) || 0
+    };
+    localStorage.setItem('gastos_goals', JSON.stringify(monthlyGoals));
     updateValues();
 };
 
-// Add Transaction to DOM
+expectedIncomeInput.addEventListener('change', saveMonthlyGoals);
+savingsGoalInput.addEventListener('change', saveMonthlyGoals);
+
+const loadMonthlyGoals = () => {
+    const key = getMonthKey();
+    if (monthlyGoals[key]) {
+        expectedIncomeInput.value = monthlyGoals[key].income > 0 ? monthlyGoals[key].income : '';
+        savingsGoalInput.value = monthlyGoals[key].savings > 0 ? monthlyGoals[key].savings : '';
+    } else {
+        expectedIncomeInput.value = '';
+        savingsGoalInput.value = '';
+    }
+};
+
+const init = () => {
+    updateMonthDisplay();
+    loadMonthlyGoals();
+    
+    transactionListEl.innerHTML = '';
+    renderCategories();
+    
+    const filtered = getFilteredTransactions();
+    
+    if(filtered.length === 0) {
+        transactionListEl.innerHTML = '<li class="empty-state">No hay movimientos en este mes.</li>';
+    } else {
+        filtered.forEach(addTransactionDOM);
+    }
+    
+    renderPendingTransactions();
+    updateValues();
+};
+
 const addTransactionDOM = (transaction) => {
     const isIncome = transaction.type === 'income';
     const sign = isIncome ? '+' : '-';
@@ -98,56 +159,132 @@ const addTransactionDOM = (transaction) => {
     transactionListEl.appendChild(item);
 };
 
-// Update Balance, Income and Expense
-const updateValues = () => {
-    const amounts = transactions.map(t => t.type === 'income' ? t.amount : -t.amount);
+const renderPendingTransactions = () => {
+    pendingListEl.innerHTML = '';
+    if(pendingTransactions.length === 0) {
+        pendingListEl.innerHTML = '<li class="empty-state" style="padding: 10px; text-align: center; font-size: 0.9em; color: var(--text-muted);">No hay pagos pendientes.</li>';
+        return;
+    }
     
-    const total = amounts.reduce((acc, item) => (acc += item), 0).toFixed(2);
-    
-    const income = transactions
-        .filter(t => t.type === 'income')
-        .reduce((acc, t) => (acc += t.amount), 0)
-        .toFixed(2);
+    pendingTransactions.forEach(t => {
+        const item = document.createElement('li');
+        item.classList.add('transaction-item', 'pending');
         
-    const expense = transactions
-        .filter(t => t.type === 'expense')
-        .reduce((acc, t) => (acc += t.amount), 0)
-        .toFixed(2);
+        item.innerHTML = `
+            <div class="transaction-info">
+                <div class="transaction-icon">
+                    <i class="fa-solid fa-clock"></i>
+                </div>
+                <div class="transaction-details">
+                    <p>${t.desc}</p>
+                    <small>Pendiente</small>
+                </div>
+            </div>
+            <div class="transaction-action" style="display: flex; align-items: center;">
+                <button class="btn-pay" onclick="payPending(${t.id})" title="Pagar ahora">
+                    <i class="fa-solid fa-check"></i>
+                </button>
+                <span class="transaction-amount" style="margin-right: 10px;">${formatMoney(t.amount)}</span>
+                <button class="delete-btn" onclick="removePending(${t.id})">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+            </div>
+        `;
+        pendingListEl.appendChild(item);
+    });
+};
+
+const updateValues = () => {
+    const filtered = getFilteredTransactions();
+    const amounts = filtered.map(t => t.type === 'income' ? t.amount : -t.amount);
+    
+    const total = amounts.reduce((acc, item) => (acc += item), 0);
+    const income = filtered.filter(t => t.type === 'income').reduce((acc, t) => (acc += t.amount), 0);
+    const expense = filtered.filter(t => t.type === 'expense').reduce((acc, t) => (acc += t.amount), 0);
         
     balanceEl.innerText = formatMoney(total);
     incomeTotalEl.innerText = formatMoney(income);
     expenseTotalEl.innerText = formatMoney(expense);
+    
+    // Update Goals Progress
+    const key = getMonthKey();
+    const expectedIncome = monthlyGoals[key] ? monthlyGoals[key].income : 0;
+    const savingsGoal = monthlyGoals[key] ? monthlyGoals[key].savings : 0;
+    
+    let currentSavings = total; 
+    
+    if (savingsGoal > 0) {
+        let percent = (currentSavings / savingsGoal) * 100;
+        if (currentSavings <= 0) percent = 0;
+        if (percent > 100) percent = 100;
+        
+        currentSavingsEl.innerText = formatMoney(currentSavings);
+        savingsStatusEl.innerText = `${percent.toFixed(0)}%`;
+        savingsBarFill.style.width = `${percent}%`;
+        
+        if (percent >= 100) {
+            savingsBarFill.style.backgroundColor = '#10B981'; // Green
+        } else if (percent > 50) {
+            savingsBarFill.style.backgroundColor = '#3B82F6'; // Blue
+        } else {
+            savingsBarFill.style.backgroundColor = 'var(--income)'; // Default
+        }
+    } else {
+        currentSavingsEl.innerText = formatMoney(currentSavings);
+        savingsStatusEl.innerText = '-';
+        savingsBarFill.style.width = '0%';
+    }
 };
 
-// Remove Transaction
 const removeTransaction = (id) => {
     transactions = transactions.filter(t => t.id !== id);
     updateLocalStorage();
     init();
 };
 
-// Update Local Storage
-const updateLocalStorage = () => {
-    localStorage.setItem('gastos_transactions', JSON.stringify(transactions));
+const removePending = (id) => {
+    pendingTransactions = pendingTransactions.filter(t => t.id !== id);
+    updateLocalStorage();
+    init();
 };
 
-// Generate Random ID
+window.payPending = (id) => {
+    const pendingItem = pendingTransactions.find(t => t.id === id);
+    if(pendingItem) {
+        pendingTransactions = pendingTransactions.filter(t => t.id !== id);
+        
+        const newTransaction = {
+            id: generateID(),
+            desc: pendingItem.desc,
+            amount: pendingItem.amount,
+            type: 'expense',
+            date: new Date().toISOString()
+        };
+        
+        transactions.push(newTransaction);
+        updateLocalStorage();
+        init();
+    }
+};
+
+const updateLocalStorage = () => {
+    localStorage.setItem('gastos_transactions', JSON.stringify(transactions));
+    localStorage.setItem('gastos_pending', JSON.stringify(pendingTransactions));
+};
+
 const generateID = () => {
     return Math.floor(Math.random() * 100000000);
 };
 
-// Add New Transaction
 form.addEventListener('submit', (e) => {
     e.preventDefault();
     
     let finalDesc = descSelect.value;
     if (descSelect.value === 'Otra') {
         finalDesc = descInput.value.trim();
-        // Guardar nueva categoría si no existe
         if (finalDesc && !categories.includes(finalDesc)) {
             categories.push(finalDesc);
             localStorage.setItem('gastos_categories', JSON.stringify(categories));
-            renderCategories();
         }
     }
     
@@ -156,6 +293,10 @@ form.addEventListener('submit', (e) => {
         return;
     }
     
+    // Assign a date within the currently selected month so it appears immediately
+    // Or if looking at a past/future month, maybe place it there? Let's just use current real date.
+    // Wait, if they are viewing July and it's July, new Date() is fine.
+    // If they are viewing August and add a transaction, it'll go to current date. That's standard.
     const transaction = {
         id: generateID(),
         desc: finalDesc,
@@ -165,35 +306,65 @@ form.addEventListener('submit', (e) => {
     };
     
     transactions.push(transaction);
-    
-    addTransactionDOM(transaction);
-    updateValues();
     updateLocalStorage();
+    init();
     
-    // Clear inputs
     descSelect.value = categories[0];
     descInput.style.display = 'none';
     descInput.required = false;
     descInput.value = '';
     amountInput.value = '';
-    
-    // Remove empty state if present
-    const emptyState = document.querySelector('.empty-state');
-    if(emptyState) {
-        init();
-    }
 });
 
-// Clear All Transactions
+pendingForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const desc = pendingDescInput.value.trim();
+    const amount = +pendingAmountInput.value;
+    
+    if(!desc || !amount) return;
+    
+    const p = {
+        id: generateID(),
+        desc: desc,
+        amount: amount
+    };
+    
+    pendingTransactions.push(p);
+    updateLocalStorage();
+    init();
+    
+    pendingDescInput.value = '';
+    pendingAmountInput.value = '';
+});
+
 clearAllBtn.addEventListener('click', () => {
-    if(confirm('¿Estás seguro de que quieres borrar todos los movimientos?')) {
-        transactions = [];
+    if(confirm('¿Estás seguro de que quieres borrar todos los movimientos de ESTE MES?')) {
+        const filteredIds = getFilteredTransactions().map(t => t.id);
+        transactions = transactions.filter(t => !filteredIds.includes(t.id));
         updateLocalStorage();
         init();
     }
 });
 
-// Run init
+// Month Navigation
+prevMonthBtn.addEventListener('click', () => {
+    currentMonth--;
+    if(currentMonth < 0) {
+        currentMonth = 11;
+        currentYear--;
+    }
+    init();
+});
+
+nextMonthBtn.addEventListener('click', () => {
+    currentMonth++;
+    if(currentMonth > 11) {
+        currentMonth = 0;
+        currentYear++;
+    }
+    init();
+});
+
 init();
 
 // Profile Modal Elements
@@ -205,7 +376,6 @@ const profilePasswordInput = document.getElementById('profile-password');
 const changePasswordBtn = document.getElementById('change-password-btn');
 const logoutBtn = document.getElementById('logout-btn');
 
-// Load profile data
 let userName = localStorage.getItem('gastos_user_name') || 'Usuario';
 profileNameInput.value = userName;
 
@@ -217,42 +387,34 @@ closeProfileBtn.addEventListener('click', () => {
     profileModal.classList.remove('active');
 });
 
-// Update name on change
 profileNameInput.addEventListener('change', (e) => {
     userName = e.target.value;
     localStorage.setItem('gastos_user_name', userName);
 });
 
 let isEditingPassword = false;
-
 changePasswordBtn.addEventListener('click', () => {
     if (!isEditingPassword) {
-        // Modo edición
         isEditingPassword = true;
         profilePasswordInput.removeAttribute('readonly');
         profilePasswordInput.value = '';
         profilePasswordInput.focus();
         changePasswordBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Guardar Contraseña';
-        changePasswordBtn.style.backgroundColor = '#10B981'; // Color verde
+        changePasswordBtn.style.backgroundColor = '#10B981';
         changePasswordBtn.style.color = 'white';
         changePasswordBtn.style.borderColor = '#059669';
     } else {
-        // Guardar contraseña
         if (profilePasswordInput.value.trim() === '') {
             alert('La contraseña no puede estar vacía');
             return;
         }
-        
         isEditingPassword = false;
         profilePasswordInput.setAttribute('readonly', true);
         profilePasswordInput.value = '********';
-        
-        // Restaurar botón
         changePasswordBtn.innerHTML = '<i class="fa-solid fa-key"></i> Cambiar Contraseña';
         changePasswordBtn.style.backgroundColor = ''; 
         changePasswordBtn.style.color = '';
         changePasswordBtn.style.borderColor = '';
-        
         alert('¡Contraseña actualizada con éxito!');
     }
 });
@@ -261,17 +423,13 @@ logoutBtn.addEventListener('click', () => {
     if(confirm('¿Estás seguro que deseas cerrar sesión?')) {
         profileModal.classList.remove('active');
         localStorage.setItem('gastos_logged_in', 'false');
-        
-        // Mostrar pantalla de login
         document.getElementById('login-screen').style.display = 'flex';
         document.getElementById('main-app').style.display = 'none';
-        
-        // Limpiar formulario de login
         document.getElementById('login-form').reset();
     }
 });
 
-// --- Lógica de Inicio de Sesión ---
+// Login Logic
 const loginScreen = document.getElementById('login-screen');
 const mainApp = document.getElementById('main-app');
 const loginForm = document.getElementById('login-form');
@@ -294,7 +452,6 @@ const checkLoginState = () => {
     }
 };
 
-// Navegación entre formularios
 goToRegisterBtn.addEventListener('click', (e) => {
     e.preventDefault();
     loginForm.style.display = 'none';
@@ -311,7 +468,6 @@ goToLoginBtn.addEventListener('click', (e) => {
     authSubtitle.innerText = 'Inicia sesión para controlar tus gastos';
 });
 
-// Submit Login
 loginForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const user = loginUserInput.value.trim();
@@ -320,7 +476,6 @@ loginForm.addEventListener('submit', (e) => {
     }
 });
 
-// Submit Registro
 registerForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const user = registerUserInput.value.trim();
@@ -330,7 +485,6 @@ registerForm.addEventListener('submit', (e) => {
     }
 });
 
-// Función compartida para iniciar sesión
 const loginUser = (user) => {
     localStorage.setItem('gastos_logged_in', 'true');
     localStorage.setItem('gastos_user_name', user);
@@ -341,10 +495,9 @@ const loginUser = (user) => {
     mainApp.style.display = 'block';
 };
 
-// Validar al iniciar
 checkLoginState();
 
-// --- Lógica de Temas ---
+// Theming Logic
 const colorOptions = document.querySelectorAll('.color-option');
 const body = document.body;
 
@@ -352,7 +505,7 @@ const savedTheme = localStorage.getItem('gastos_theme') || '';
 if (savedTheme) {
     body.className = savedTheme;
 }
-// Marcar la opción correcta como activa
+
 colorOptions.forEach(opt => {
     opt.classList.remove('active');
     if (opt.dataset.theme === savedTheme) {

@@ -66,8 +66,14 @@
                 </div>
             </div>
             
+            <div class="month-filter">
+                <button class="icon-btn" id="prev-month-btn"><i class="fa-solid fa-chevron-left"></i></button>
+                <h3 id="current-month-display" style="margin:0; font-weight: 500;">Mes Año</h3>
+                <button class="icon-btn" id="next-month-btn"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+
             <div class="balance-card">
-                <p>Balance Total</p>
+                <p>Balance Total del Mes</p>
                 <h1 id="balance">$0.00</h1>
                 
                 <div class="summary-cards">
@@ -115,6 +121,49 @@
                         <i class="fa-solid fa-plus"></i> Añadir
                     </button>
                 </form>
+            </section>
+
+            <section class="monthly-goals">
+                <h3>Metas del Mes</h3>
+                <div class="goals-container">
+                    <div class="goal-card">
+                        <label for="expected-income">Ingreso Esperado</label>
+                        <div class="input-with-icon">
+                            <i class="fa-solid fa-dollar-sign"></i>
+                            <input type="number" id="expected-income" placeholder="0.00" step="0.01">
+                        </div>
+                    </div>
+                    <div class="goal-card">
+                        <label for="savings-goal">Meta de Ahorro</label>
+                        <div class="input-with-icon">
+                            <i class="fa-solid fa-piggy-bank"></i>
+                            <input type="number" id="savings-goal" placeholder="0.00" step="0.01">
+                        </div>
+                    </div>
+                </div>
+                <div class="savings-progress">
+                    <div class="progress-text">
+                        <span>Ahorrado: <strong id="current-savings">$0.00</strong></span>
+                        <span id="savings-status">0%</span>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" id="savings-bar-fill"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="pending-payments">
+                <h3>Pagos Pendientes</h3>
+                <form id="pending-form" class="compact-form">
+                    <input type="text" id="pending-desc" placeholder="Descripción..." required>
+                    <input type="number" id="pending-amount" placeholder="Monto" step="0.01" min="0.01" required>
+                    <button type="submit" class="btn-submit btn-icon-only" title="Añadir pendiente">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                </form>
+                <ul id="pending-list" class="transaction-list">
+                    <!-- Pendientes dinámicos -->
+                </ul>
             </section>
 
             <section class="history">
