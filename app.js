@@ -2,7 +2,6 @@
 const balanceEl = document.getElementById('balance');
 const incomeTotalEl = document.getElementById('income-total');
 const expenseTotalEl = document.getElementById('expense-total');
-const transactionListEl = document.getElementById('transaction-list');
 const form = document.getElementById('transaction-form');
 const descSelect = document.getElementById('desc-select');
 const descInput = document.getElementById('desc');
@@ -42,7 +41,7 @@ const formatDate = (dateString) => {
 
 // Application State
 let transactions = JSON.parse(localStorage.getItem('gastos_transactions')) || [];
-let categories = JSON.parse(localStorage.getItem('gastos_categories')) || ['Mercado', 'Arriendo', 'Cuota Carro', 'Cuota Apartamento'];
+let categories = JSON.parse(localStorage.getItem('gastos_categories')) || ['Arriendo', 'Cuota Apartamento', 'Cuota Carro', 'Mercado'];
 let pendingTransactions = JSON.parse(localStorage.getItem('gastos_pending')) || [];
 let monthlyGoals = JSON.parse(localStorage.getItem('gastos_goals')) || {};
 
@@ -65,6 +64,7 @@ const updateMonthDisplay = () => {
 };
 
 const renderCategories = () => {
+    categories.sort((a, b) => a.localeCompare(b));
     descSelect.innerHTML = '';
     pendingDescSelect.innerHTML = '';
     categories.forEach(cat => {
@@ -206,17 +206,11 @@ const init = () => {
     updateMonthDisplay();
     loadMonthlyGoals();
     
-    transactionListEl.innerHTML = '';
     renderCategories();
-    
-    const filtered = getFilteredTransactions();
-    
-    if(filtered.length === 0) {
-        transactionListEl.innerHTML = '<li class="empty-state">No hay movimientos en este mes.</li>';
-    } else {
-        filtered.forEach(addTransactionDOM);
-    }
-    
+    updateDOM();
+};
+
+const updateDOM = () => {
     renderPendingTransactions();
     updateValues();
     renderChart();
@@ -329,13 +323,13 @@ const updateValues = () => {
     }
 };
 
-const removeTransaction = (id) => {
+window.removeTransaction = (id) => {
     transactions = transactions.filter(t => t.id !== id);
     updateLocalStorage();
     init();
 };
 
-const removePending = (id) => {
+window.removePending = (id) => {
     pendingTransactions = pendingTransactions.filter(t => t.id !== id);
     updateLocalStorage();
     init();
