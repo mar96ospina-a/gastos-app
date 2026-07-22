@@ -24,6 +24,7 @@ const savingsBarFill = document.getElementById('savings-bar-fill');
 const pendingForm = document.getElementById('pending-form');
 const pendingDescInput = document.getElementById('pending-desc');
 const pendingAmountInput = document.getElementById('pending-amount');
+const pendingDateInput = document.getElementById('pending-date');
 const pendingListEl = document.getElementById('pending-list');
 
 // Formatting utilities
@@ -177,12 +178,12 @@ const renderPendingTransactions = () => {
                 </div>
                 <div class="transaction-details">
                     <p>${t.desc}</p>
-                    <small>Pendiente</small>
+                    <small>Programado: ${t.date ? formatDate(t.date) : 'Pendiente'}</small>
                 </div>
             </div>
             <div class="transaction-action" style="display: flex; align-items: center;">
-                <button class="btn-pay" onclick="payPending(${t.id})" title="Pagar ahora">
-                    <i class="fa-solid fa-check"></i>
+                <button class="btn-pay" onclick="payPending(${t.id})" title="Confirmar Pago">
+                    <i class="fa-solid fa-check"></i> Pagar
                 </button>
                 <span class="transaction-amount" style="margin-right: 10px;">${formatMoney(t.amount)}</span>
                 <button class="delete-btn" onclick="removePending(${t.id})">
@@ -251,6 +252,8 @@ const removePending = (id) => {
 window.payPending = (id) => {
     const pendingItem = pendingTransactions.find(t => t.id === id);
     if(pendingItem) {
+        if(!confirm(`¿Confirmas que ya realizaste el pago de "${pendingItem.desc}"?`)) return;
+        
         pendingTransactions = pendingTransactions.filter(t => t.id !== id);
         
         const newTransaction = {
@@ -258,7 +261,7 @@ window.payPending = (id) => {
             desc: pendingItem.desc,
             amount: pendingItem.amount,
             type: 'expense',
-            date: new Date().toISOString()
+            date: new Date().toISOString() // La fecha de pago real (hoy)
         };
         
         transactions.push(newTransaction);
@@ -320,13 +323,15 @@ pendingForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const desc = pendingDescInput.value.trim();
     const amount = +pendingAmountInput.value;
+    const date = pendingDateInput.value;
     
-    if(!desc || !amount) return;
+    if(!desc || !amount || !date) return;
     
     const p = {
         id: generateID(),
         desc: desc,
-        amount: amount
+        amount: amount,
+        date: date
     };
     
     pendingTransactions.push(p);
@@ -335,6 +340,7 @@ pendingForm.addEventListener('submit', (e) => {
     
     pendingDescInput.value = '';
     pendingAmountInput.value = '';
+    pendingDateInput.value = '';
 });
 
 clearAllBtn.addEventListener('click', () => {
