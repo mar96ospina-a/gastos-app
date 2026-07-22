@@ -169,12 +169,12 @@
                     <i class="fa-solid fa-chevron-down"></i>
                 </div>
                 <div class="section-content" style="display: none;">
-                    <form id="pending-form" class="compact-form" style="flex-wrap: wrap;">
-                        <select id="pending-desc-select" required style="flex: 1; padding: 10px; border: 1px solid #E2E8F0; border-radius: 10px; font-family: inherit; outline: none;"></select>
-                        <input type="text" id="pending-desc-custom" placeholder="Nueva categoría..." style="display:none; flex: 1;" autocomplete="off">
-                        <input type="number" id="pending-amount" placeholder="Monto" step="0.01" min="0.01" required style="width: 100px; flex: none;">
-                        <input type="date" id="pending-date" required style="flex: 1;">
-                        <button type="submit" class="btn-submit btn-icon-only" title="Añadir pendiente">
+                    <form id="pending-form" class="compact-form" style="flex-wrap: wrap; display: flex; gap: 10px;">
+                        <select id="pending-desc-select" required style="flex: 1 1 100%; padding: 10px; border: 1px solid #E2E8F0; border-radius: 10px; font-family: inherit; outline: none;"></select>
+                        <input type="text" id="pending-desc-custom" placeholder="Nueva categoría..." style="display:none; flex: 1 1 100%; padding: 10px; border: 1px solid #E2E8F0; border-radius: 10px;" autocomplete="off">
+                        <input type="number" id="pending-amount" placeholder="Monto" step="0.01" min="0.01" required style="flex: 1; min-width: 80px;">
+                        <input type="date" id="pending-date" required style="flex: 1.5; min-width: 120px;">
+                        <button type="submit" class="btn-submit btn-icon-only" title="Añadir pendiente" style="flex: none; width: auto; padding: 0 15px;">
                             <i class="fa-solid fa-plus"></i>
                         </button>
                     </form>
