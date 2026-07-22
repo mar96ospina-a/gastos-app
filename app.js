@@ -22,7 +22,8 @@ const savingsStatusEl = document.getElementById('savings-status');
 const savingsBarFill = document.getElementById('savings-bar-fill');
 
 const pendingForm = document.getElementById('pending-form');
-const pendingDescInput = document.getElementById('pending-desc');
+const pendingDescSelect = document.getElementById('pending-desc-select');
+const pendingDescCustom = document.getElementById('pending-desc-custom');
 const pendingAmountInput = document.getElementById('pending-amount');
 const pendingDateInput = document.getElementById('pending-date');
 const pendingListEl = document.getElementById('pending-list');
@@ -63,16 +64,27 @@ const updateMonthDisplay = () => {
 
 const renderCategories = () => {
     descSelect.innerHTML = '';
+    pendingDescSelect.innerHTML = '';
     categories.forEach(cat => {
         const option = document.createElement('option');
         option.value = cat;
         option.innerText = cat;
         descSelect.appendChild(option);
+        
+        const option2 = document.createElement('option');
+        option2.value = cat;
+        option2.innerText = cat;
+        pendingDescSelect.appendChild(option2);
     });
     const customOption = document.createElement('option');
     customOption.value = 'Otra';
     customOption.innerText = 'Otra...';
     descSelect.appendChild(customOption);
+    
+    const customOption2 = document.createElement('option');
+    customOption2.value = 'Otra';
+    customOption2.innerText = 'Otra...';
+    pendingDescSelect.appendChild(customOption2);
 };
 
 descSelect.addEventListener('change', () => {
@@ -84,6 +96,18 @@ descSelect.addEventListener('change', () => {
         descInput.style.display = 'none';
         descInput.required = false;
         descInput.value = '';
+    }
+});
+
+pendingDescSelect.addEventListener('change', () => {
+    if (pendingDescSelect.value === 'Otra') {
+        pendingDescCustom.style.display = 'block';
+        pendingDescCustom.required = true;
+        pendingDescCustom.focus();
+    } else {
+        pendingDescCustom.style.display = 'none';
+        pendingDescCustom.required = false;
+        pendingDescCustom.value = '';
     }
 });
 
@@ -321,15 +345,25 @@ form.addEventListener('submit', (e) => {
 
 pendingForm.addEventListener('submit', (e) => {
     e.preventDefault();
-    const desc = pendingDescInput.value.trim();
+    
+    let finalDesc = pendingDescSelect.value;
+    if (pendingDescSelect.value === 'Otra') {
+        finalDesc = pendingDescCustom.value.trim();
+        if (finalDesc && !categories.includes(finalDesc)) {
+            categories.push(finalDesc);
+            localStorage.setItem('gastos_categories', JSON.stringify(categories));
+            renderCategories();
+        }
+    }
+    
     const amount = +pendingAmountInput.value;
     const date = pendingDateInput.value;
     
-    if(!desc || !amount || !date) return;
+    if(!finalDesc || !amount || !date) return;
     
     const p = {
         id: generateID(),
-        desc: desc,
+        desc: finalDesc,
         amount: amount,
         date: date
     };
@@ -338,7 +372,11 @@ pendingForm.addEventListener('submit', (e) => {
     updateLocalStorage();
     init();
     
-    pendingDescInput.value = '';
+    pendingDescSelect.value = categories[0];
+    pendingDescCustom.style.display = 'none';
+    pendingDescCustom.required = false;
+    pendingDescCustom.value = '';
+    
     pendingAmountInput.value = '';
     pendingDateInput.value = '';
 });
