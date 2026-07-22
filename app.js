@@ -7,7 +7,6 @@ const descSelect = document.getElementById('desc-select');
 const descInput = document.getElementById('desc');
 const amountInput = document.getElementById('amount');
 const typeInput = document.getElementById('type');
-const clearAllBtn = document.getElementById('clear-all');
 
 // New UI Elements
 const currentMonthDisplay = document.getElementById('current-month-display');
@@ -216,36 +215,6 @@ const updateDOM = () => {
     renderChart();
 };
 
-const addTransactionDOM = (transaction) => {
-    const isIncome = transaction.type === 'income';
-    const sign = isIncome ? '+' : '-';
-    const icon = isIncome ? '<i class="fa-solid fa-arrow-trend-up"></i>' : '<i class="fa-solid fa-bag-shopping"></i>';
-    
-    const item = document.createElement('li');
-    item.classList.add('transaction-item');
-    item.classList.add(transaction.type);
-    
-    item.innerHTML = `
-        <div class="transaction-info">
-            <div class="transaction-icon">
-                ${icon}
-            </div>
-            <div class="transaction-details">
-                <p>${transaction.desc}</p>
-                <small>${formatDate(transaction.date)}</small>
-            </div>
-        </div>
-        <div class="transaction-action">
-            <span class="transaction-amount">${sign}${formatMoney(transaction.amount)}</span>
-            <button class="delete-btn" onclick="removeTransaction(${transaction.id})">
-                <i class="fa-solid fa-trash"></i>
-            </button>
-        </div>
-    `;
-    
-    transactionListEl.appendChild(item);
-};
-
 const renderPendingTransactions = () => {
     pendingListEl.innerHTML = '';
     if(pendingTransactions.length === 0) {
@@ -441,15 +410,6 @@ pendingForm.addEventListener('submit', (e) => {
     
     pendingAmountInput.value = '';
     pendingDateInput.value = '';
-});
-
-clearAllBtn.addEventListener('click', () => {
-    if(confirm('¿Estás seguro de que quieres borrar todos los movimientos de ESTE MES?')) {
-        const filteredIds = getFilteredTransactions().map(t => t.id);
-        transactions = transactions.filter(t => !filteredIds.includes(t.id));
-        updateLocalStorage();
-        init();
-    }
 });
 
 // Month Navigation
