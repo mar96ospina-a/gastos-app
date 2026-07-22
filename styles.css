@@ -757,3 +757,23 @@ body.theme-gray {
     margin-right: 5px;
 }
 
+
+/* Collapsible Sections */
+.section-header.collapsible {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    padding: 10px 0;
+}
+.section-header.collapsible h3 {
+    margin-bottom: 0;
+}
+.section-header.collapsible i {
+    transition: transform 0.3s ease;
+    color: #64748B;
+}
+.section-header.collapsible.active i {
+    transform: rotate(180deg);
+}
+

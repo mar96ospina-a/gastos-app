@@ -568,3 +568,14 @@ colorOptions.forEach(option => {
         localStorage.setItem('gastos_theme', theme);
     });
 });
+
+window.toggleSection = (headerElement) => {
+    headerElement.classList.toggle("active");
+    const content = headerElement.nextElementSibling;
+    if (content.style.display === "none") {
+        content.style.display = "block";
+    } else {
+        content.style.display = "none";
+    }
+}
+
